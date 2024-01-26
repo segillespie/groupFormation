@@ -12,7 +12,20 @@ heuristics <- function(df, nGroups, heuristicMethod){
   # heuristicMethod = {'top_to_bottom', 'snake'}
   
   # data checks and set inputs
-  # TBP
+  # check df.  Should be a data frame with a numeric field titled metric
+  # check if df is a data frame
+  if(is.data.frame(df)){ # if df is a dataframe
+    if(!('metric' %in% colnames(df))){
+      stop('Input df requires a numeric field named metric.')
+    }
+  }else{
+    if(class(x) == 'numeric'){
+      warning('df supplied as numeric vector.  Converting to a data frame with supplied data as "metric".')
+      df = data.frame(metric = df)
+    }else{
+      stop('Input df must have a numeric vector')
+    }
+  }
   
   
   # Get Initial Data and Create Groups --------------------------------------
