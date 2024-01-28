@@ -17,6 +17,13 @@
 
 heuristics <- function(df, nGroups, heuristicMethod){
   require(dplyr)
+  
+  availableMethods <- c('top_to_bottom', 'snake', 'random', 'stratified_random', 
+                        'dynamic_least_help', 'dynamic_most_help') # 'ordered_grouping', 'dynamic_alternating_help')
+  
+  if(heuristicMethod == 'allMethods'){
+    return(availableMethods)
+  }
 
 # Check Input Data --------------------------------------------------------
   # check df.  Should be a data frame with a numeric field titled metric
@@ -39,8 +46,6 @@ heuristics <- function(df, nGroups, heuristicMethod){
   if(nGroups < 1){stop('nGroups must be >= 1')}
 
   # check heuristicMethod
-  availableMethods <- c('top_to_bottom', 'snake', 'random', 'stratified_random', 
-                        'dynamic_least_help', 'dynamic_most_help', 'dynamic_alternating_help')
   if(!(heuristicMethod %in% availableMethods)){
     stop(paste('heuristicMethod must be one of:', paste(availableMethods, collapse = ', ')))
   }
@@ -197,6 +202,13 @@ if(heuristicMethod == 'dynamic_alternating_help'){
   return(df)
 }
   
+  
+# Method 8: Ordered Grouping --------------------------------------
+if(heuristicMethod == 'ordered_grouping'){
+  # Rack and stack.  This is the worst case scenario for equitable groups.
+  stop('steve needs to code this')
+  return(df)
+}
 # if no method found, return nothing
   stop('This should never happen.')
 }
