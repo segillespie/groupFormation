@@ -45,3 +45,13 @@ resultsDf %>%
   theme_minimal()
   #pivot_wider(names_from = method, values_from = metricDelta)
 
+resultsDf %>% 
+  group_by(org, method, groupNumber) %>% 
+  summarize(groupRange = max(metric)-min(metric)) %>% 
+  ungroup() %>% 
+  group_by(org, method) %>% 
+  summarize(meanGroupRange = mean(groupRange), maxGroupRange = max(groupRange)) %>% 
+  filter(method %in% c('Snake', 'top_to_bottom')) %>% 
+  ggplot(aes(x = meanGroupRange, color = method)) + 
+  geom_density() + 
+  theme_minimal()
