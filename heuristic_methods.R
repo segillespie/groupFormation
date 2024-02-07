@@ -14,6 +14,8 @@
 #   - dynamic_most_help
 #   - dynamic_alternating_help (to be coded)
 
+#test comment
+
 
 heuristics <- function(df, nGroups, heuristicMethod){
   require(dplyr)
