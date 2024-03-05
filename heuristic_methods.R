@@ -21,7 +21,7 @@ heuristics <- function(df, nGroups, heuristicMethod){
   require(dplyr)
   
   availableMethods <- c('linear_draft', 'snake_draft', 'random', 'stratified_random', 
-                        'tax_the_rich', 'feed_the_poor') # 'ordered_grouping', 'alternating_convergence')
+                        'tax_the_rich', 'feed_the_poor', 'alternating_convergence') 
   
   if(heuristicMethod == 'allMethods'){
     return(availableMethods)
@@ -200,7 +200,56 @@ heuristics <- function(df, nGroups, heuristicMethod){
 
 # Method 7: Dynamic Alternating Help --------------------------------------
 if(heuristicMethod == 'alternating_convergence'){
-  stop('steve needs to code this')
+  ###################
+  df <- df %>% dplyr::arrange(-metric)
+  # Set initial groups 
+  df$groupNumber <- c(seq(1:nGroups), rep(NA, nPeople - nGroups))
+  myIndex <- 1 # index for tracking fill
+  
+  groupDf$curGroupSize <- 1
+  
+  # Iterate while not all groups are filled
+  while(sum(groupDf$groupSize - groupDf$curGroupSize) > 0){
+    
+    ### Tax the rich first
+    availableGroups <- groupDf %>% filter(groupSize > curGroupSize) %>% pull(groupNumber)
+
+    nextGroupAdd <- df %>% 
+      filter(!is.na(groupNumber)) %>%  # only look at allocated students
+      group_by(groupNumber) %>% summarise(meanMetric = mean(metric)) %>% # get mean metrics
+      filter(groupNumber %in% availableGroups) %>% #only look at groups that aren't full
+      arrange(-meanMetric) %>% # find the highest gpa
+      slice(1) %>%  # take the group with the highest mean gpa
+      pull(groupNumber) # get that group number
+    
+    # Assign next highest student to nextGroupAdd
+    df$groupNumber[nPeople - myIndex + 1] <- nextGroupAdd
+    
+    groupDf[groupDf$groupNumber == nextGroupAdd, 'curGroupSize'] <- groupDf[groupDf$groupNumber == nextGroupAdd, 'curGroupSize'] + 1
+    
+    if(sum(is.na(df$groupNumber)) == 0){break}  # break loop if all groups allocated
+    
+    ### Feed the poor second
+    availableGroups <- groupDf %>% filter(groupSize > curGroupSize) %>% pull(groupNumber)
+    
+    nextGroupAdd <- df %>% 
+      filter(!is.na(groupNumber)) %>%  # only look at allocated students
+      group_by(groupNumber) %>% summarise(meanMetric = mean(metric)) %>% # get mean metrics
+      filter(groupNumber %in% availableGroups) %>% #only look at groups that aren't full
+      arrange(meanMetric) %>% # find the highest gpa
+      slice(1) %>%  # take the group with the highest mean gpa
+      pull(groupNumber) # get that group number
+    
+    df$groupNumber[nGroups + myIndex] <- nextGroupAdd
+    groupDf[groupDf$groupNumber == nextGroupAdd, 'curGroupSize'] <- groupDf[groupDf$groupNumber == nextGroupAdd, 'curGroupSize'] + 1
+    
+    myIndex <- myIndex + 1
+    if(sum(is.na(df$groupNumber)) == 0){break}  # break loop if all groups allocated
+  }
+  
+  df$method <- 'alternating_convergence'
+  
+  ###################
   return(df)
 }
   
