@@ -6,13 +6,13 @@
 # divide the organization into groups of equal or equal +/- 1 size
 
 # The user must provide the desired heuristic method.  There are currently 7:
-#   - top_to_bottom
-#   - snake
+#   - linear_draft
+#   - snake_draft
 #   - random
 #   - stratified_random
-#   - dynamic_least_help
-#   - dynamic_most_help
-#   - dynamic_alternating_help (to be coded)
+#   - tax_the_rich
+#   - feed_the_poor
+#   - alternating_convergence (to be coded)
 
 #test comment
 
@@ -20,8 +20,8 @@
 heuristics <- function(df, nGroups, heuristicMethod){
   require(dplyr)
   
-  availableMethods <- c('top_to_bottom', 'snake', 'random', 'stratified_random', 
-                        'dynamic_least_help', 'dynamic_most_help') # 'ordered_grouping', 'dynamic_alternating_help')
+  availableMethods <- c('linear_draft', 'snake_draft', 'random', 'stratified_random', 
+                        'tax_the_rich', 'feed_the_poor') # 'ordered_grouping', 'alternating_convergence')
   
   if(heuristicMethod == 'allMethods'){
     return(availableMethods)
@@ -66,22 +66,22 @@ heuristics <- function(df, nGroups, heuristicMethod){
   }
   
 # Method 1: Top to Bottom ----------------------------------------------------------------
-  if(heuristicMethod == 'top_to_bottom'){
+  if(heuristicMethod == 'linear_draft'){
     # Order by GPA Highest to Lowest
     # Assign Group 1, 2, 3, 1, 2, 3
     # Example, 10 people in 3 groups (A, B, C)
     # A, B, C, A, B, C, A, B, C, A (group of 4 has lowest GPA as additional person)
     df <- df %>% dplyr::arrange(-metric)
     df$groupNumber <- rep(groupDf$groupNumber, ceiling(nPeople/nGroups))[1:nPeople]
-    df$method <- 'top_to_bottom'
+    df$method <- 'linear_draft'
     return(df)
   }
 
-# Method 2: Snake -------------------------------------------------------------------
-  if(heuristicMethod == 'snake'){
+# Method 2: snake_draft -------------------------------------------------------------------
+  if(heuristicMethod == 'snake_draft'){
     df <- df %>% dplyr::arrange(-metric)
     df$groupNumber <- rep(c(groupDf$groupNumber, order(groupDf$groupNumber, decreasing = T)), ceiling(ceiling(nPeople/nGroups)/2))[1:nPeople]
-    df$method <- 'Snake'
+    df$method <- 'snake_draft'
     return(df)
   }
 
@@ -107,7 +107,7 @@ heuristics <- function(df, nGroups, heuristicMethod){
   }
 
 # Method 5: Dynamic Most Help ---------------------------------------------------
-  if(heuristicMethod == 'dynamic_most_help'){ 
+  if(heuristicMethod == 'feed_the_poor'){ 
     df <- df %>% dplyr::arrange(-metric)
     # Set initial groups 
     df$groupNumber <- c(seq(1:nGroups), nGroups, rep(NA, nPeople - nGroups - 1))
@@ -147,7 +147,7 @@ heuristics <- function(df, nGroups, heuristicMethod){
       if(myIndex > nPeople){break}  
     }
     
-    df$method <- 'dynamic_most_help'
+    df$method <- 'feed_the_poor'
     
     return(df)
   }
@@ -159,7 +159,7 @@ heuristics <- function(df, nGroups, heuristicMethod){
   
 
 # Method 6: Dynamic Least Help -----------------------------------------
-  if(heuristicMethod == 'dynamic_least_help'){
+  if(heuristicMethod == 'tax_the_rich'){
     df <- df %>% dplyr::arrange(-metric)
     # Set initial groups 
     df$groupNumber <- c(seq(1:nGroups), rep(NA, nPeople - nGroups))
@@ -192,14 +192,14 @@ heuristics <- function(df, nGroups, heuristicMethod){
       if(myIndex > nPeople){break}  
     }
     
-    df$method <- 'dynamic_least_help'
+    df$method <- 'tax_the_rich'
     
     return(df)
   }
   
 
 # Method 7: Dynamic Alternating Help --------------------------------------
-if(heuristicMethod == 'dynamic_alternating_help'){
+if(heuristicMethod == 'alternating_convergence'){
   stop('steve needs to code this')
   return(df)
 }
