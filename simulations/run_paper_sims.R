@@ -24,31 +24,33 @@ class_files <- class_files[grep('class_size', class_files)]
 methods_deterministic <- c('linear_draft', 'snake_draft', 'tax_the_rich', 'feed_the_poor', 'alternating_convergence')
 methods_random <- c('random', 'stratified_random')
 
-#run deterministic methods --> fast enough to run serial 
+methods_all <- c(methods_deterministic, methods_random)
+
+#run all methods as if they were deterministic
 big_out <- list()
 out_count <- 1
-for(m in methods_deterministic){
+for(m in methods_all){
   for(cl in class_files){
     #read in data
     class_samples <- read.csv(cl, stringsAsFactors = FALSE)
     num_groups <- 2:floor(ncol(class_samples)/3) #start with 2 groups, go until num groups that would have at least 3 people
-    
+
     print(paste0('running for class file', ' ', cl, ' with method', ' ', m))
     pb <- txtProgressBar(min = 0, max = (length(num_groups) * nrow(class_samples)), style = 3)
     counter <- 0
-    
+
     for(ng in num_groups){
       for(sample in 1:nrow(class_samples)){
         df_to_run <- data.frame(metric = as.vector(t(class_samples[sample,])))
-        
+
         assignments <- data.table(heuristics(df_to_run, as.numeric(ng), m))
-        
+
         #group_averages
         tmp <- assignments[, .(avg = mean(metric)), by = .(group = groupNumber)]
         delta <- max(tmp$avg) - min(tmp$avg)
 
         tmp_df <- data.frame(method = m, sample = sample, class_size = ncol(class_samples), num_groups = ng, delta = delta)
-        
+
         big_out[[out_count]] <- tmp_df
         setTxtProgressBar(pb, counter)
         counter <- counter + 1
@@ -58,7 +60,45 @@ for(m in methods_deterministic){
   }
 }
 
-determ_methods <- rbindlist(big_out)
+all_methods <- rbindlist(big_out)
+write.csv(all_methods, './sim_output/heuristic_all_sims_v2.csv', row.names = FALSE)
+
+
+#run deterministic methods --> fast enough to run serial 
+# big_out <- list()
+# out_count <- 1
+# for(m in methods_deterministic){
+#   for(cl in class_files){
+#     #read in data
+#     class_samples <- read.csv(cl, stringsAsFactors = FALSE)
+#     num_groups <- 2:floor(ncol(class_samples)/3) #start with 2 groups, go until num groups that would have at least 3 people
+#     
+#     print(paste0('running for class file', ' ', cl, ' with method', ' ', m))
+#     pb <- txtProgressBar(min = 0, max = (length(num_groups) * nrow(class_samples)), style = 3)
+#     counter <- 0
+#     
+#     for(ng in num_groups){
+#       for(sample in 1:nrow(class_samples)){
+#         df_to_run <- data.frame(metric = as.vector(t(class_samples[sample,])))
+#         
+#         assignments <- data.table(heuristics(df_to_run, as.numeric(ng), m))
+#         
+#         #group_averages
+#         tmp <- assignments[, .(avg = mean(metric)), by = .(group = groupNumber)]
+#         delta <- max(tmp$avg) - min(tmp$avg)
+# 
+#         tmp_df <- data.frame(method = m, sample = sample, class_size = ncol(class_samples), num_groups = ng, delta = delta)
+#         
+#         big_out[[out_count]] <- tmp_df
+#         setTxtProgressBar(pb, counter)
+#         counter <- counter + 1
+#         out_count <- out_count + 1
+#       }
+#     }
+#   }
+# }
+# 
+# determ_methods <- rbindlist(big_out)
 #write.csv(determ_methods, './sim_output/heuristic_sims_deterministic.csv', row.names = FALSE)
 
 #run the random methods serial --> wicked slow
